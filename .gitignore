@@ -1,0 +1,32 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment variables
+.env
+
+# SQLite database
+backend/*.db
+
+# Virtual environment
+venv/
+env/
+
+# VSCode and PyCharm
+.vscode/
+.idea/
+
+# Log files
+*.log
+
+# Flask cache and instance folder
+instance/
+*.pid
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+.vscode
+*.env
