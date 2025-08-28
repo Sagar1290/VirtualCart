@@ -1,8 +1,11 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, send_from_directory
 from datetime import datetime
 import sqlite3
+from flask_cors import CORS
 
-app = Flask(__name__)
+
+app = Flask(__name__, static_folder="../frontend/build", static_url_path='')
+CORS(app)
 DB_PATH = "virtual_cart.db"
 
 
@@ -18,6 +21,11 @@ def query_db(query, args=(), one=False, commit=False):
     rv = cur.fetchall()
     conn.close()
     return (rv[0] if rv else None) if one else rv
+
+
+@app.route("/")
+def serve_index():
+    return send_from_directory(app.static_folder, "index.html")
 
 
 @app.route("/product/<barcode>", methods=["GET"])
@@ -40,7 +48,7 @@ def create_cart():
         commit=True,
     )
     cart_id = query_db("SELECT last_insert_rowid()", one=True)[0]
-    return jsonify({"cart_id": cart_id})
+    return jsonify({"cart_id": 10})
 
 
 @app.route("/cart/<int:cart_id>/add", methods=["POST"])
