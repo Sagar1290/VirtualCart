@@ -1,7 +1,6 @@
-import React from "react";
 import { Trash2, Plus, Minus } from "lucide-react";
 
-function Cart({ cartItems, onCheckout, onRemove, onUpdateQty }) {
+const Cart = ({ cartItems, onCheckout, onRemove, onUpdateQty }) => {
   const total = cartItems.reduce(
     (sum, item) =>
       sum +
