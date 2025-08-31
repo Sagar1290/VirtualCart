@@ -8,6 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 function App() {
   const [cartId, setCartId] = useState(null);
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [loadingCart, setLoadingCart] = useState(false);
   const [error, setError] = useState(null);
@@ -41,14 +42,14 @@ function App() {
       }
       if (!res.ok) throw new Error("Error fetching product");
       const data = await res.json();
-      setProduct(data);
+      setProduct(data["product"]);
+      setRelatedProducts(data["related_products"])
     } catch (err) {
       setError(err.message);
       setProduct(null);
     }
   };
 
-  // Add product to cart
   const addToCart = async (barcode) => {
     if (!cartId) {
       setError("Please start a cart session first");
@@ -68,7 +69,6 @@ function App() {
     }
   };
 
-  // Load cart items from backend
   const loadCart = async () => {
     if (!cartId) return;
     setLoadingCart(true);
@@ -85,7 +85,6 @@ function App() {
     }
   };
 
-  // On cartId change, load cart items
   useEffect(() => {
     if (cartId) {
       loadCart();
@@ -118,7 +117,36 @@ function App() {
   const onBarcodeScanned = (barcode) => {
     fetchProduct(barcode);
   };
-  console.log(cartId)
+
+  const onRemove = async (item) => {
+    const barcode = item.barcode;
+    try {
+      const res = await fetch(`${API_URL}/cart/${cartId}/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode }),
+      });
+      if (!res.ok) throw new Error("Failed to add product to cart");
+      await loadCart();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  const onUpdateQty = async (item, qty) => {
+    const barcode = item.barcode
+    try {
+      const res = await fetch(`${API_URL}/cart/${cartId}/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ barcode, quantity: qty }),
+      });
+      if (!res.ok) throw new Error("Failed to add product to cart");
+      await loadCart();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -137,26 +165,27 @@ function App() {
           {error && <p className="mt-4 text-red-600">{error}</p>}
         </>
       ) : (
-        <>
-          <BarcodeInput onBarcode={onBarcodeScanned} />
-          {error && <p className="mt-4 text-red-600">{error}</p>}
+        <div className="flex gap-6">
+          <div className="flex-1">
+            <BarcodeInput onBarcode={onBarcodeScanned} />
+            {error && <p className="mt-4 text-red-600">{error}</p>}
 
-          {product && (
-            <ProductInfo
-              product={product}
-              onAdd={() => addToCart(product.barcode)}
-            />
-          )}
-
-          {loadingCart ? (
-            <p>Loading cart...</p>
-          ) : (
-            <Cart cartItems={cartItems} onLoadCart={loadCart} onCheckout={checkout} />
-          )}
-        </>
+            {product && (
+              <div className="mt-4">
+                <ProductInfo
+                  product={product}
+                  relatedProducts={relatedProducts}
+                  onAdd={() => addToCart(product.barcode)}
+                />
+              </div>
+            )}
+          </div>
+          <Cart cartItems={cartItems} onCheckout={checkout} onRemove={onRemove} onUpdateQty={onUpdateQty} />
+        </div>
       )}
     </div>
   );
+
 }
 
 export default App;
